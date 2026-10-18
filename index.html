@@ -183,14 +183,25 @@
       // Atveria QGIS Cloud žemėlapį tokiu pačiu būdu kaip Karaliaučiaus srities vietovardžių sąraše.
       const parishMapUrl = 'https://qgiscloud.com/Townames/KL14/?l=Apskrities%20centras%2CParapijos%20centras%2CVietov%C4%97%2CMi%C5%A1kas%2CMikrotoponimas%2CPiliakalnis%2CJ%C5%ABros%20%C4%AFlanka%2CJ%C5%ABros%20kranto%20linija%2CE%C5%BEerai%2CE%C5%BEer%C5%B3%20pavadinimai%2CDidel%C4%97s%20up%C4%97s%2CUp%C4%97s%2CPalv%C4%97s%2CLietuvos%20siena%2CLenkijos%20siena%2Cktowns%20copy%20copy!%2Cupeskl_2!&bl=osm_hdm&t=KL14';
 
+      const parishCoordinates = new Map();
+      function parishSpecificMapUrl(name) {
+        const coords = parishCoordinates.get(name);
+        if (!coords) return parishMapUrl;
+        const [longitude, latitude] = coords;
+        const mapX = longitude * 20037508.34 / 180;
+        const mapY = Math.log(Math.tan((90 + latitude) * Math.PI / 360)) / (Math.PI / 180) * 20037508.34 / 180;
+        const mapSize = 500;
+        return `${parishMapUrl}&e=${mapX - mapSize},${mapY - mapSize},${mapX + mapSize},${mapY + mapSize}`;
+      }
+
       function makeParishCell(name) {
         const td = document.createElement('td');
         const link = document.createElement('a');
-        link.href = parishMapUrl;
+        link.href = parishSpecificMapUrl(name);
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         link.textContent = displayParish(name) || '—';
-        link.title = 'Atverti Karaliaučiaus srities žemėlapį';
+        link.title = parishCoordinates.has(name) ? 'Atverti žemėlapį ties parapijos centru' : 'Atverti bendrą žemėlapį (parapijos koordinatės nerastos)';
         td.append(link);
         return td;
       }
@@ -278,6 +289,22 @@
       nextBtn.addEventListener('click', () => {
         if ((page + 1) * PAGE_SIZE < filtered.length) { page++; render(); }
       });
+
+      // Parapijų centrų koordinatės imamos iš to paties GIS žinyno GeoJSON.
+      // Jei konkrečios parapijos centro įrašo nėra, nuoroda lieka į bendrą žemėlapį.
+      fetch('https://townames.github.io/Karaliauciaus-srities-vietovardziai/ktowns.geojson')
+        .then(response => { if (!response.ok) throw new Error('GIS duomenys nepasiekiami'); return response.json(); })
+        .then(data => {
+          for (const feature of (data.features || [])) {
+            const props = feature.properties || {};
+            if (props.adm !== 'B' || !props.de_names || !feature.geometry) continue;
+            const coords = feature.geometry.coordinates;
+            const point = Array.isArray(coords?.[0]?.[0]) ? coords[0][0] : coords[0];
+            if (Array.isArray(point) && point.length >= 2) parishCoordinates.set(props.de_names, point);
+          }
+          if (records.length) render();
+        })
+        .catch(() => console.warn('Parapijų koordinačių nepavyko įkelti; naudojamos bendro žemėlapio nuorodos.'));
 
       fetch('./parish.csv')
         .then(response => {
