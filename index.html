@@ -162,7 +162,7 @@
         'Pillkallen': 'Pilkalnis',
         'Pilluponen': 'Pilupėnai',
         'Pillupönen': 'Pilupėnai',
-        'Popelken': 'Papelki',
+        'Popelken': 'Papelka',
         'Puschdorf': 'Pušdorfas',
         'Schaaken': 'Šakiai',
         'Schakuhnen': 'Šakūnai',
@@ -178,6 +178,21 @@
       };
       function displayParish(name) {
         return parishLithuanian[name] || name;
+      }
+
+      // Atveria QGIS Cloud žemėlapį tokiu pačiu būdu kaip Karaliaučiaus srities vietovardžių sąraše.
+      const parishMapUrl = 'https://qgiscloud.com/Townames/KL14/?l=Apskrities%20centras%2CParapijos%20centras%2CVietov%C4%97%2CMi%C5%A1kas%2CMikrotoponimas%2CPiliakalnis%2CJ%C5%ABros%20%C4%AFlanka%2CJ%C5%ABros%20kranto%20linija%2CE%C5%BEerai%2CE%C5%BEer%C5%B3%20pavadinimai%2CDidel%C4%97s%20up%C4%97s%2CUp%C4%97s%2CPalv%C4%97s%2CLietuvos%20siena%2CLenkijos%20siena%2Cktowns%20copy%20copy!%2Cupeskl_2!&bl=osm_hdm&t=KL14';
+
+      function makeParishCell(name) {
+        const td = document.createElement('td');
+        const link = document.createElement('a');
+        link.href = parishMapUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = displayParish(name) || '—';
+        link.title = 'Atverti Karaliaučiaus srities žemėlapį';
+        td.append(link);
+        return td;
       }
 
       function makeCell(text) {
@@ -205,7 +220,7 @@
           const fragment = document.createDocumentFragment();
           for (const item of chunk) {
             const tr = document.createElement('tr');
-            tr.append(makeCell(displayParish(item.parish)));
+            tr.append(makeParishCell(item.parish));
             tr.append(makeCell(item.place));
             tr.append(makeCell(item.lithuanian));
             const typeCell = document.createElement('td');
