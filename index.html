@@ -10,14 +10,14 @@
     * { box-sizing:border-box; }
     body { margin:0; background:var(--wash); color:var(--ink); font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
     header { background:var(--accent2); color:white; padding:34px 20px 30px; }
-    .wrap { width:min(1180px,100% - 32px); margin-inline:auto; }
+    .wrap { width:min(1300px,100% - 20px); margin-inline:auto; }
     .eyebrow { text-transform:uppercase; letter-spacing:.12em; font-size:.76rem; opacity:.8; }
     h1 { margin:.25rem 0 .35rem; font-size:clamp(1.8rem,4vw,2.7rem); line-height:1.15; }
     header p { margin:.4rem 0 0; max-width:760px; color:#e2edf2; }
     main { padding:18px 0 24px; }
-    .workspace { display:grid; grid-template-columns:minmax(280px, 0.78fr) minmax(0, 1.22fr); gap:16px; align-items:start; }
+    .workspace { display:grid; grid-template-columns:minmax(320px, 0.9fr) minmax(0, 1.22fr); gap:16px; align-items:start; }
     .map-panel { position:sticky; top:12px; min-width:0; }
-    .map-frame { width:100%; height:clamp(230px,38vh,360px); overflow:hidden; border:1px solid var(--line); border-radius:10px; background:#edf2f5; }
+    .map-frame { width:100%; height:clamp(276px,46vh,432px); overflow:hidden; border:1px solid var(--line); border-radius:10px; background:#edf2f5; }
     .map-frame iframe { width:100%; height:100%; border:0; }
     .list-column { min-width:0; }
     .list-scroll { max-height:calc(100vh - 300px); min-height:280px; overflow:auto; overscroll-behavior:contain; }
@@ -74,7 +74,7 @@
       <div class="map-frame">
         <iframe
           title="Karaliaučiaus srities vietovardžių interaktyvus GIS žemėlapis"
-          src="https://qgiscloud.com/Townames/KL14/"
+          id="main-map-frame" src="https://qgiscloud.com/Townames/KL14/"
           loading="lazy"
           allow="fullscreen"
           referrerpolicy="strict-origin-when-cross-origin"
@@ -201,22 +201,26 @@
       const parishCoordinates = new Map();
       function parishSpecificMapUrl(name) {
         const coords = parishCoordinates.get(name);
-        if (!coords) return parishMapUrl;
+        if (!coords) return defaultMapUrl;
         const [longitude, latitude] = coords;
         const mapX = longitude * 20037508.34 / 180;
         const mapY = Math.log(Math.tan((90 + latitude) * Math.PI / 360)) / (Math.PI / 180) * 20037508.34 / 180;
         const mapSize = 500;
-        return `${parishMapUrl}&e=${mapX - mapSize},${mapY - mapSize},${mapX + mapSize},${mapY + mapSize}`;
+        return `${parishMapBase}&e=${mapX - mapSize},${mapY - mapSize},${mapX + mapSize},${mapY + mapSize}`;
       }
 
       function makeParishCell(name) {
         const td = document.createElement('td');
         const link = document.createElement('a');
         link.href = parishSpecificMapUrl(name);
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
+        link.addEventListener('click', event => {
+          event.preventDefault();
+          const mapFrame = document.getElementById('main-map-frame');
+          mapFrame.src = link.href;
+          document.querySelector('.map-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
         link.textContent = displayParish(name) || '—';
-        link.title = parishCoordinates.has(name) ? 'Atverti žemėlapį ties parapijos centru' : 'Atverti bendrą žemėlapį (parapijos koordinatės nerastos)';
+        link.title = parishCoordinates.has(name) ? 'Rodyti šią parapiją kairėje esančiame žemėlapyje' : 'Rodyti numatytą žemėlapio vaizdą kairėje';
         td.append(link);
         return td;
       }
