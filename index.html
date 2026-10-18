@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Istorinių parapijų ir vietovardžių paieška pagal Metrikos projekto duomenis.">
+  <title>Metrikos — parapijų ir vietovardžių paieška</title>
+  <style>
+    :root { color-scheme: light; --ink:#202a35; --muted:#657383; --line:#dce3e8; --paper:#fff; --wash:#f3f6f8; --accent:#315c72; --accent2:#234657; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--wash); color:var(--ink); font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    header { background:var(--accent2); color:white; padding:34px 20px 30px; }
+    .wrap { width:min(1180px,100% - 32px); margin-inline:auto; }
+    .eyebrow { text-transform:uppercase; letter-spacing:.12em; font-size:.76rem; opacity:.8; }
+    h1 { margin:.25rem 0 .35rem; font-size:clamp(1.8rem,4vw,2.7rem); line-height:1.15; }
+    header p { margin:.4rem 0 0; max-width:760px; color:#e2edf2; }
+    main { padding:26px 0 48px; }
+    .panel { background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:20px; box-shadow:0 4px 16px #172b3810; }
+    .filters { display:grid; grid-template-columns:minmax(220px,2fr) minmax(180px,1fr) auto; gap:12px; align-items:end; }
+    label { display:block; font-weight:650; font-size:.9rem; margin-bottom:6px; }
+    input, select, button { font:inherit; }
+    input, select { width:100%; min-height:44px; border:1px solid #b9c6cf; border-radius:8px; padding:9px 11px; background:white; color:var(--ink); }
+    input:focus, select:focus, button:focus-visible, a:focus-visible { outline:3px solid #82b6d0; outline-offset:2px; }
+    button { min-height:44px; padding:9px 15px; border:0; border-radius:8px; background:var(--accent); color:white; font-weight:650; cursor:pointer; }
+    button:hover { background:var(--accent2); }
+    .hint { color:var(--muted); font-size:.9rem; margin:12px 0 0; }
+    .summary { display:flex; gap:10px 18px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin:20px 2px 12px; color:var(--muted); font-size:.92rem; }
+    .summary strong { color:var(--ink); }
+    .table-wrap { overflow:auto; border:1px solid var(--line); border-radius:12px; background:white; }
+    table { border-collapse:collapse; width:100%; min-width:760px; }
+    th, td { padding:12px 14px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { background:#eaf0f3; color:#344957; font-size:.82rem; text-transform:uppercase; letter-spacing:.035em; position:sticky; top:0; }
+    tbody tr:hover { background:#f7fafb; }
+    tbody tr:last-child td { border-bottom:0; }
+    td:first-child { font-weight:650; }
+    a { color:#215d7a; text-underline-offset:3px; }
+    .tag { display:inline-block; padding:2px 8px; border-radius:99px; background:#eaf2f5; color:#315c72; font-size:.82rem; }
+    .empty { padding:30px 16px; text-align:center; color:var(--muted); }
+    .pager { display:flex; justify-content:center; align-items:center; gap:12px; margin-top:16px; }
+    .pager button { min-height:38px; }
+    .pager button:disabled { opacity:.4; cursor:not-allowed; }
+    footer { color:var(--muted); font-size:.86rem; padding:0 0 28px; }
+    @media (max-width:700px) {
+      header { padding:26px 0; }
+      .filters { grid-template-columns:1fr; }
+      .panel { padding:15px; }
+      .wrap { width:min(100% - 20px,1180px); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="eyebrow">Istoriniai šaltiniai · vietovardžiai</div>
+      <h1>Metrikos</h1>
+      <p>Parapijų, istorinių vietovių pavadinimų ir metrikų šaltinių paieška.</p>
+    </div>
+  </header>
+  <main class="wrap">
+    <section class="panel" aria-label="Paieška">
+      <div class="filters">
+        <div>
+          <label for="query">Ieškoti parapijos, vietovės ar šaltinio</label>
+          <input id="query" type="search" placeholder="Pvz., Didlacken, Alviškiai…" autocomplete="off">
+        </div>
+        <div>
+          <label for="parish">Filtruoti pagal parapiją</label>
+          <select id="parish"><option value="">Visos parapijos</option></select>
+        </div>
+        <button id="clear" type="button">Išvalyti paiešką</button>
+      </div>
+      <p class="hint">Paieška tikrina parapijos pavadinimą, vietovardžių formas, vietovės tipą ir šaltinio aprašą.</p>
+    </section>
+
+    <div class="summary" aria-live="polite">
+      <span id="status">Įkeliami duomenys…</span>
+      <span id="page-info"></span>
+    </div>
+    <section class="table-wrap" aria-label="Paieškos rezultatai">
+      <table>
+        <thead><tr><th>Parapija</th><th>Vietovės pavadinimas</th><th>Lietuviškas pavadinimas</th><th>Tipas</th><th>Šaltinis</th></tr></thead>
+        <tbody id="results"><tr><td colspan="5" class="empty">Įkeliami duomenys…</td></tr></tbody>
+      </table>
+    </section>
+    <nav class="pager" aria-label="Rezultatų puslapiai">
+      <button id="prev" type="button" disabled>← Ankstesnis</button>
+      <span id="pager-label">1</span>
+      <button id="next" type="button" disabled>Kitas →</button>
+    </nav>
+  </main>
+  <footer class="wrap">Duomenų šaltinis: <a href="./parish.csv">parish.csv</a>. Šaltinių nuorodos atveriamos naujame skirtuke.</footer>
+  <script>
+    (() => {
+      const PAGE_SIZE = 50;
+      const queryEl = document.getElementById('query');
+      const parishEl = document.getElementById('parish');
+      const resultsEl = document.getElementById('results');
+      const statusEl = document.getElementById('status');
+      const pageInfoEl = document.getElementById('page-info');
+      const pagerLabel = document.getElementById('pager-label');
+      const prevBtn = document.getElementById('prev');
+      const nextBtn = document.getElementById('next');
+      let records = [];
+      let filtered = [];
+      let page = 0;
+
+      // CSV uses semicolons. Some source descriptions themselves contain semicolons,
+      // so all fields between the place type and final URL are combined as the source.
+      function parseLine(line) {
+        const fields = line.split(';').map(v => v.trim());
+        if (fields.length < 2) return null;
+        const parish = fields[0] || '';
+        const place = fields[1] || '';
+        const lithuanian = fields[2] || '';
+        const type = fields[3] || '';
+        const last = fields[fields.length - 1] || '';
+        const hasUrl = /^https?:\/\//i.test(last);
+        const sourceEnd = hasUrl ? fields.length - 1 : fields.length;
+        const source = fields.slice(4, sourceEnd).filter(Boolean).join('; ');
+        if (!(parish || place || lithuanian || source)) return null;
+        return { parish, place, lithuanian, type, source, url: hasUrl ? last : '' };
+      }
+
+      function makeCell(text) {
+        const td = document.createElement('td');
+        td.textContent = text || '—';
+        return td;
+      }
+
+      function render() {
+        const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+        page = Math.min(page, totalPages - 1);
+        const start = page * PAGE_SIZE;
+        const chunk = filtered.slice(start, start + PAGE_SIZE);
+        resultsEl.replaceChildren();
+
+        if (!chunk.length) {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.colSpan = 5;
+          td.className = 'empty';
+          td.textContent = 'Pagal šiuos kriterijus įrašų nerasta.';
+          tr.append(td);
+          resultsEl.append(tr);
+        } else {
+          const fragment = document.createDocumentFragment();
+          for (const item of chunk) {
+            const tr = document.createElement('tr');
+            tr.append(makeCell(item.parish));
+            tr.append(makeCell(item.place));
+            tr.append(makeCell(item.lithuanian));
+            const typeCell = document.createElement('td');
+            if (item.type) {
+              const tag = document.createElement('span');
+              tag.className = 'tag';
+              tag.textContent = item.type;
+              typeCell.append(tag);
+            } else typeCell.textContent = '—';
+            tr.append(typeCell);
+            const sourceCell = document.createElement('td');
+            if (item.url) {
+              const link = document.createElement('a');
+              link.href = item.url;
+              link.target = '_blank';
+              link.rel = 'noopener noreferrer';
+              link.textContent = item.source || 'Atverti šaltinį';
+              link.setAttribute('aria-label', (item.source || 'Atverti šaltinį') + ' (atsidaro naujame skirtuke)');
+              sourceCell.append(link);
+            } else sourceCell.textContent = item.source || '—';
+            tr.append(sourceCell);
+            fragment.append(tr);
+          }
+          resultsEl.append(fragment);
+        }
+        statusEl.textContent = 'Rasta įrašų: ' + filtered.length.toLocaleString('lt-LT') + ' iš ' + records.length.toLocaleString('lt-LT');
+        pageInfoEl.textContent = filtered.length ? (start + 1).toLocaleString('lt-LT') + '–' + Math.min(start + PAGE_SIZE, filtered.length).toLocaleString('lt-LT') : '';
+        pagerLabel.textContent = 'Puslapis ' + (page + 1) + ' iš ' + totalPages;
+        prevBtn.disabled = page === 0;
+        nextBtn.disabled = page >= totalPages - 1;
+      }
+
+      function applyFilters(resetPage = true) {
+        const q = queryEl.value.trim().toLocaleLowerCase('lt-LT');
+        const parish = parishEl.value;
+        filtered = records.filter(item => {
+          if (parish && item.parish !== parish) return false;
+          if (!q) return true;
+          return [item.parish, item.place, item.lithuanian, item.type, item.source]
+            .some(value => value.toLocaleLowerCase('lt-LT').includes(q));
+        });
+        if (resetPage) page = 0;
+        render();
+      }
+
+      queryEl.addEventListener('input', () => applyFilters());
+      parishEl.addEventListener('change', () => applyFilters());
+      document.getElementById('clear').addEventListener('click', () => {
+        queryEl.value = '';
+        parishEl.value = '';
+        applyFilters();
+        queryEl.focus();
+      });
+      prevBtn.addEventListener('click', () => { if (page > 0) { page--; render(); } });
+      nextBtn.addEventListener('click', () => {
+        if ((page + 1) * PAGE_SIZE < filtered.length) { page++; render(); }
+      });
+
+      fetch('./parish.csv')
+        .then(response => {
+          if (!response.ok) throw new Error('Nepavyko įkelti parish.csv (HTTP ' + response.status + ').');
+          return response.text();
+        })
+        .then(text => {
+          const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(line => line.trim());
+          records = lines.slice(1).map(parseLine).filter(Boolean);
+          const parishes = [...new Set(records.map(item => item.parish).filter(Boolean))]
+            .sort((a, b) => a.localeCompare(b, 'lt'));
+          for (const name of parishes) {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            parishEl.append(option);
+          }
+          applyFilters();
+        })
+        .catch(error => {
+          statusEl.textContent = 'Duomenų įkelti nepavyko.';
+          resultsEl.replaceChildren();
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.colSpan = 5;
+          td.className = 'empty';
+          td.textContent = error.message + ' Patikrinkite, ar parish.csv yra tame pačiame kataloge kaip index.html.';
+          tr.append(td);
+          resultsEl.append(tr);
+          pagerLabel.textContent = '—';
+        });
+    })();
+  </script>
+</body>
+</html>
