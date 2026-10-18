@@ -136,6 +136,50 @@
         return { parish, place, lithuanian, type, source, url: hasUrl ? last : '' };
       }
 
+      // Lietuviški parapijų pavadinimai pagal istorinę Mažosios Lietuvos vietovardžių vartoseną.
+      // Originalus pavadinimas iš CSV išsaugomas paieškai ir filtro reikšmei.
+      const parishLithuanian = {
+        'Budwethen': 'Būdviečiai',
+        'Darkehmen': 'Darkiemis',
+        'Didlacken': 'Didlaukiai',
+        'Groß Aulowönen': 'Didieji Aulovėnai',
+        'Groß Legitten': 'Didieji Lėgėčiai',
+        'Heinrichswalde': 'Gastos',
+        'Ischdaggen': 'Išdagiai',
+        'Jodlauken': 'Juodlaukiai',
+        'Kaimen': 'Kaimėnai',
+        'Kallningken': 'Kalnininkai',
+        'Karalene': 'Karalienė',
+        'Karkeln': 'Karklė',
+        'Kaukehmen': 'Kaukiemis',
+        'Kraupischken': 'Kraupiškėnai',
+        'Labiau': 'Labguva',
+        'Lappienen': 'Lapynai',
+        'Lasdehnen': 'Lazdynai',
+        'Lengwethen': 'Lengvėnai',
+        'Mallwischken': 'Mališkiai',
+        'Niebudszen': 'Naubudžiai',
+        'Pillkallen': 'Pilkalnis',
+        'Pilluponen': 'Pilupėnai',
+        'Pillupönen': 'Pilupėnai',
+        'Popelken': 'Papelki',
+        'Puschdorf': 'Pušdorfas',
+        'Schaaken': 'Šakiai',
+        'Schakuhnen': 'Šakūnai',
+        'Schönwalde': 'Gražiškiai',
+        'Skaisgirren': 'Skaistgiriai',
+        'Stallupönen': 'Stalupėnai',
+        'Szillen': 'Žiliai',
+        'Tapiau': 'Tepliava',
+        'Tilsit': 'Tilžė',
+        'Tollmingkehmen': 'Tolminkiemis',
+        'Walterkehmen': 'Valtarkiemis',
+        'Parish / source collection': 'Parapija / šaltinių rinkinys'
+      };
+      function displayParish(name) {
+        return parishLithuanian[name] || name;
+      }
+
       function makeCell(text) {
         const td = document.createElement('td');
         td.textContent = text || '—';
@@ -161,7 +205,7 @@
           const fragment = document.createDocumentFragment();
           for (const item of chunk) {
             const tr = document.createElement('tr');
-            tr.append(makeCell(item.parish));
+            tr.append(makeCell(displayParish(item.parish)));
             tr.append(makeCell(item.place));
             tr.append(makeCell(item.lithuanian));
             const typeCell = document.createElement('td');
@@ -200,7 +244,7 @@
         filtered = records.filter(item => {
           if (parish && item.parish !== parish) return false;
           if (!q) return true;
-          return [item.parish, item.place, item.lithuanian, item.type, item.source]
+          return [item.parish, displayParish(item.parish), item.place, item.lithuanian, item.type, item.source]
             .some(value => value.toLocaleLowerCase('lt-LT').includes(q));
         });
         if (resetPage) page = 0;
@@ -233,7 +277,7 @@
           for (const name of parishes) {
             const option = document.createElement('option');
             option.value = name;
-            option.textContent = name;
+            option.textContent = displayParish(name);
             parishEl.append(option);
           }
           applyFilters();
