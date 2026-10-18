@@ -155,7 +155,7 @@
       // Originalus pavadinimas iš CSV išsaugomas paieškai ir filtro reikšmei.
       const parishLithuanian = {
         'Budwethen': 'Būdavietė',
-        'Darkehmen': 'Darkiemis',
+        'Darkehmen': 'Darkiemė',
         'Didlacken': 'Didlaukiai',
         'Groß Aulowönen': 'Didieji Aulovėnai',
         'Groß Legitten': 'Didieji Lėgėčiai',
@@ -203,7 +203,8 @@
       function parishSpecificMapUrl(name) {
         // Tiksliai nustatyta aprėptis Didlaukiams (Didlacken), vienoda visose jo eilutėse.
         const fixedExtents = {
-          'Didlacken': '2420828%2C7279863%2C2422662%2C7280904'
+          'Didlacken': '2420828%2C7279863%2C2422662%2C7280904',
+          'Darkehmen': '2449329%2C7247525%2C2451164%2C7248566'
         };
         if (fixedExtents[name]) return `${parishMapBase}&e=${fixedExtents[name]}`;
 
