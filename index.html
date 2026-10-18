@@ -299,8 +299,17 @@
             const props = feature.properties || {};
             if (props.adm !== 'B' || !props.de_names || !feature.geometry) continue;
             const coords = feature.geometry.coordinates;
-            const point = Array.isArray(coords?.[0]?.[0]) ? coords[0][0] : coords[0];
-            if (Array.isArray(point) && point.length >= 2) parishCoordinates.set(props.de_names, point);
+            function firstCoordinate(value) {
+              if (!Array.isArray(value)) return null;
+              if (value.length >= 2 && typeof value[0] === 'number' && typeof value[1] === 'number') return value;
+              for (const child of value) {
+                const found = firstCoordinate(child);
+                if (found) return found;
+              }
+              return null;
+            }
+            const point = firstCoordinate(coords);
+            if (point) parishCoordinates.set(props.de_names, point);
           }
           if (records.length) render();
         })
