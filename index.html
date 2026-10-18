@@ -201,6 +201,12 @@
 
       const parishCoordinates = new Map();
       function parishSpecificMapUrl(name) {
+        // Tiksliai nustatyta aprėptis Didlaukiams (Didlacken), vienoda visose jo eilutėse.
+        const fixedExtents = {
+          'Didlacken': '2420828%2C7279863%2C2422662%2C7280904'
+        };
+        if (fixedExtents[name]) return `${parishMapBase}&e=${fixedExtents[name]}`;
+
         const coords = parishCoordinates.get(name);
         if (!coords) return defaultMapUrl;
         const [longitude, latitude] = coords;
