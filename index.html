@@ -14,7 +14,17 @@
     .eyebrow { text-transform:uppercase; letter-spacing:.12em; font-size:.76rem; opacity:.8; }
     h1 { margin:.25rem 0 .35rem; font-size:clamp(1.8rem,4vw,2.7rem); line-height:1.15; }
     header p { margin:.4rem 0 0; max-width:760px; color:#e2edf2; }
-    main { padding:26px 0 48px; }
+    main { padding:18px 0 24px; }
+    .workspace { display:grid; grid-template-columns:minmax(280px, 0.78fr) minmax(0, 1.22fr); gap:16px; align-items:start; }
+    .map-panel { position:sticky; top:12px; min-width:0; }
+    .map-frame { width:100%; height:clamp(230px,38vh,360px); overflow:hidden; border:1px solid var(--line); border-radius:10px; background:#edf2f5; }
+    .map-frame iframe { width:100%; height:100%; border:0; }
+    .list-column { min-width:0; }
+    .list-scroll { max-height:calc(100vh - 300px); min-height:280px; overflow:auto; overscroll-behavior:contain; }
+    .page-jumps { display:flex; justify-content:center; flex-wrap:wrap; gap:5px; margin-top:12px; }
+    .page-jumps button { min-width:34px; min-height:34px; padding:4px 8px; }
+    .page-jumps button[aria-current="page"] { background:var(--accent2); outline:2px solid #82b6d0; }
+    @media (max-width:850px) { .workspace { grid-template-columns:1fr; } .map-panel { position:sticky; top:0; z-index:5; } .map-frame { height:260px; } .list-scroll { max-height:65vh; } }
     .panel { background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:20px; box-shadow:0 4px 16px #172b3810; }
     .filters { display:grid; grid-template-columns:minmax(220px,2fr) minmax(180px,1fr) auto; gap:12px; align-items:end; }
     label { display:block; font-weight:650; font-size:.9rem; margin-bottom:6px; }
@@ -57,14 +67,14 @@
     </div>
   </header>
   <main class="wrap">
-    <section class="panel map-panel" aria-label="Karaliaučiaus srities žemėlapis" style="margin-bottom:22px">
+    <div class="workspace">
+    <section class="panel map-panel" aria-label="Karaliaučiaus srities žemėlapis">
       <h2 style="margin:0 0 8px;font-size:1.35rem">Karaliaučiaus srities žemėlapis</h2>
       <p class="hint" style="margin:0 0 12px">Interaktyvus žemėlapis su originaliais GIS sluoksniais. Galite artinti, tolinti ir pasirinkti objektus; atidarius visą žemėlapį pasiekiamos visos jo funkcijos.</p>
-      <div style="width:100%;height:clamp(300px,48vw,480px);overflow:hidden;border:1px solid var(--line);border-radius:10px;background:#edf2f5">
+      <div class="map-frame">
         <iframe
           title="Karaliaučiaus srities vietovardžių interaktyvus GIS žemėlapis"
           src="https://qgiscloud.com/Townames/KL14/"
-          style="width:100%;height:100%;border:0"
           loading="lazy"
           allow="fullscreen"
           referrerpolicy="strict-origin-when-cross-origin"
@@ -72,6 +82,8 @@
       </div>
       <p class="hint"><a href="https://qgiscloud.com/Townames/KL14/" target="_blank" rel="noopener noreferrer">Atidaryti žemėlapį atskirame lange ↗</a></p>
     </section>
+    </section>
+    <div class="list-column">
     <section class="panel" aria-label="Paieška">
       <div class="filters">
         <div>
@@ -91,7 +103,7 @@
       <span id="status">Įkeliami duomenys…</span>
       <span id="page-info"></span>
     </div>
-    <section class="table-wrap" aria-label="Paieškos rezultatai">
+    <section class="table-wrap list-scroll" aria-label="Paieškos rezultatai">
       <table>
         <thead><tr><th>Parapija</th><th>Vietovės pavadinimas</th><th>Lietuviškas pavadinimas</th><th>Tipas</th><th>Šaltinis</th></tr></thead>
         <tbody id="results"><tr><td colspan="5" class="empty">Įkeliami duomenys…</td></tr></tbody>
@@ -102,6 +114,9 @@
       <span id="pager-label">1</span>
       <button id="next" type="button" disabled>Kitas →</button>
     </nav>
+    <div id="page-jumps" class="page-jumps" aria-label="Tiesioginis puslapių pasirinkimas"></div>
+    </div>
+    </div>
   </main>
   <footer class="wrap">Duomenų šaltinis: <a href="./parish.csv">parish.csv</a>. Šaltinių nuorodos atveriamos naujame skirtuke.</footer>
   <script>
@@ -115,6 +130,7 @@
       const pagerLabel = document.getElementById('pager-label');
       const prevBtn = document.getElementById('prev');
       const nextBtn = document.getElementById('next');
+      const pageJumps = document.getElementById('page-jumps');
       let records = [];
       let filtered = [];
       let page = 0;
@@ -262,6 +278,16 @@
         pagerLabel.textContent = 'Puslapis ' + (page + 1) + ' iš ' + totalPages;
         prevBtn.disabled = page === 0;
         nextBtn.disabled = page >= totalPages - 1;
+        pageJumps.replaceChildren();
+        for (let i = 0; i < totalPages; i++) {
+          const jump = document.createElement('button');
+          jump.type = 'button';
+          jump.textContent = String(i + 1);
+          jump.setAttribute('aria-label', 'Atverti sąrašo puslapį ' + (i + 1));
+          if (i === page) jump.setAttribute('aria-current', 'page');
+          jump.addEventListener('click', () => { page = i; render(); });
+          pageJumps.append(jump);
+        }
       }
 
       function applyFilters(resetPage = true) {
