@@ -108,13 +108,8 @@
       <span id="status">Įkeliami duomenys…</span>
       <span id="page-info"></span>
     </div>
-   <nav class="pager" aria-label="Puslapių navigacija">
-      <button id="prev" type="button">Ankstesnis</button>
-      <span id="pager-label" aria-live="polite"></span>
-      <button id="next" type="button">Kitas</button>
-   </nav>
-    <div id="page-jumps" class="page-jumps" aria-label="Pasirinkti puslapį"></div>
-    <section class="table-wrap list-scroll" aria-label="Paieškos rezultatai">
+
+<section class="table-wrap list-scroll" aria-label="Paieškos rezultatai">
       <table>
         <thead><tr><th>Parapija</th><th>Vietovės pavadinimas</th><th>Lietuviškas pavadinimas</th><th>Tipas</th><th>Šaltinis</th></tr></thead>
         <tbody id="results"><tr><td colspan="5" class="empty">Įkeliami duomenys…</td></tr></tbody>
@@ -141,10 +136,6 @@
       const resultsEl = document.getElementById('results');
       const statusEl = document.getElementById('status');
       const pageInfoEl = document.getElementById('page-info');
-      const pagerLabel = document.getElementById('pager-label');
-      const prevBtn = document.getElementById('prev');
-      const nextBtn = document.getElementById('next');
-      const pageJumps = document.getElementById('page-jumps');
       let records = [];
       let filtered = [];
       let page = 0;
@@ -340,9 +331,6 @@
         }
         statusEl.textContent = 'Rasta įrašų: ' + filtered.length.toLocaleString('lt-LT') + ' iš ' + records.length.toLocaleString('lt-LT') + ' · parapijų: ' + groups.length.toLocaleString('lt-LT');
         pageInfoEl.textContent = groups.length ? (start + 1).toLocaleString('lt-LT') + '–' + Math.min(start + PAGE_SIZE, groups.length).toLocaleString('lt-LT') + ' parapijų' : '';
-        pagerLabel.textContent = 'Puslapis ' + (page + 1) + ' iš ' + totalPages;
-        prevBtn.disabled = page === 0;
-        nextBtn.disabled = page >= totalPages - 1;
         pageJumps.replaceChildren();
         for (let i = 0; i < totalPages; i++) {
           const jump = document.createElement('button');
@@ -375,10 +363,6 @@
         parishEl.value = '';
         applyFilters();
         queryEl.focus();
-      });
-      prevBtn.addEventListener('click', () => { if (page > 0) { page--; render(); } });
-      nextBtn.addEventListener('click', () => {
-        if ((page + 1) * PAGE_SIZE < filtered.length) { page++; render(); }
       });
 
       // Parapijų centrų koordinatės imamos iš to paties GIS žinyno GeoJSON.
@@ -432,7 +416,6 @@
           td.textContent = error.message + ' Patikrinkite, ar parish.csv yra tame pačiame kataloge kaip index.html.';
           tr.append(td);
           resultsEl.append(tr);
-          pagerLabel.textContent = '—';
         });
     })();
   </script>
