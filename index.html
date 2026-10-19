@@ -52,7 +52,7 @@
     .parish-count { color:var(--muted); font-size:.92rem; }
     .parish-detail-row td:first-child { width:1%; }
     .empty { padding:30px 16px; text-align:center; color:var(--muted); }
-    .pager { display:flex; justify-content:center; align-items:center; gap:12px; margin-top:16px; }
+    .pager { display:none; }
     .pager button { min-height:38px; }
     .pager button:disabled { opacity:.4; cursor:not-allowed; }
     footer { color:var(--muted); font-size:.86rem; padding:0 0 28px; }
@@ -114,12 +114,7 @@
         <tbody id="results"><tr><td colspan="5" class="empty">Įkeliami duomenys…</td></tr></tbody>
       </table>
     </section>
-    <nav class="pager" aria-label="Rezultatų puslapiai">
-      <button id="prev" type="button" disabled>← Ankstesnis</button>
-      <span id="pager-label">1</span>
-      <button id="next" type="button" disabled>Kitas →</button>
-    </nav>
-    <div id="page-jumps" class="page-jumps" aria-label="Tiesioginis puslapių pasirinkimas"></div>
+
     </div>
     </div>
   </main>
