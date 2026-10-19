@@ -45,6 +45,12 @@
     td:first-child { font-weight:650; }
     a { color:#215d7a; text-underline-offset:3px; }
     .tag { display:inline-block; padding:2px 8px; border-radius:99px; background:#eaf2f5; color:#315c72; font-size:.82rem; }
+    .parish-summary-row { background:#edf3f6; cursor:pointer; }
+    .parish-summary-row:hover { background:#e2edf2; }
+    .parish-toggle { background:transparent; color:#234657; padding:5px 0; min-height:34px; text-align:left; font-weight:750; }
+    .parish-toggle:hover { background:transparent; text-decoration:underline; }
+    .parish-count { color:var(--muted); font-size:.92rem; }
+    .parish-detail-row td:first-child { width:1%; }
     .empty { padding:30px 16px; text-align:center; color:var(--muted); }
     .pager { display:flex; justify-content:center; align-items:center; gap:12px; margin-top:16px; }
     .pager button { min-height:38px; }
@@ -241,11 +247,19 @@
         return td;
       }
 
+      const expandedParishes = new Set();
+
       function render() {
-        const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+        const grouped = new Map();
+        for (const item of filtered) {
+          if (!grouped.has(item.parish)) grouped.set(item.parish, []);
+          grouped.get(item.parish).push(item);
+        }
+        const groups = [...grouped.entries()].sort((a, b) => a[0].localeCompare(b[0], 'lt'));
+        const totalPages = Math.max(1, Math.ceil(groups.length / PAGE_SIZE));
         page = Math.min(page, totalPages - 1);
         const start = page * PAGE_SIZE;
-        const chunk = filtered.slice(start, start + PAGE_SIZE);
+        const chunk = groups.slice(start, start + PAGE_SIZE);
         resultsEl.replaceChildren();
 
         if (!chunk.length) {
@@ -258,36 +272,65 @@
           resultsEl.append(tr);
         } else {
           const fragment = document.createDocumentFragment();
-          for (const item of chunk) {
-            const tr = document.createElement('tr');
-            tr.append(makeParishCell(item.parish));
-            tr.append(makeCell(item.place));
-            tr.append(makeCell(item.lithuanian));
-            const typeCell = document.createElement('td');
-            if (item.type) {
-              const tag = document.createElement('span');
-              tag.className = 'tag';
-              tag.textContent = item.type;
-              typeCell.append(tag);
-            } else typeCell.textContent = '—';
-            tr.append(typeCell);
-            const sourceCell = document.createElement('td');
-            if (item.url) {
-              const link = document.createElement('a');
-              link.href = item.url;
-              link.target = '_blank';
-              link.rel = 'noopener noreferrer';
-              link.textContent = item.source || 'Atverti šaltinį';
-              link.setAttribute('aria-label', (item.source || 'Atverti šaltinį') + ' (atsidaro naujame skirtuke)');
-              sourceCell.append(link);
-            } else sourceCell.textContent = item.source || '—';
-            tr.append(sourceCell);
-            fragment.append(tr);
+          for (const [parishName, items] of chunk) {
+            const isExpanded = expandedParishes.has(parishName);
+            const summaryRow = document.createElement('tr');
+            summaryRow.className = 'parish-summary-row';
+            const parishCell = document.createElement('td');
+            const toggle = document.createElement('button');
+            toggle.type = 'button';
+            toggle.className = 'parish-toggle';
+            toggle.setAttribute('aria-expanded', String(isExpanded));
+            toggle.textContent = (isExpanded ? '▾ ' : '▸ ') + (displayParish(parishName) || '—');
+            toggle.title = isExpanded ? 'Sutraukti parapijos įrašus' : 'Išskleisti visus parapijos įrašus';
+            toggle.addEventListener('click', () => {
+              if (expandedParishes.has(parishName)) expandedParishes.delete(parishName);
+              else expandedParishes.add(parishName);
+              render();
+            });
+            parishCell.append(toggle);
+            summaryRow.append(parishCell);
+            const countCell = document.createElement('td');
+            countCell.colSpan = 4;
+            countCell.className = 'parish-count';
+            countCell.textContent = items.length + (items.length === 1 ? ' įrašas' : ' įrašai') + (isExpanded ? ' · spustelėkite parapijos pavadinimą, kad sutrauktumėte' : ' · spustelėkite parapijos pavadinimą, kad išskleistumėte');
+            summaryRow.append(countCell);
+            fragment.append(summaryRow);
+
+            if (isExpanded) {
+              for (const item of items) {
+                const tr = document.createElement('tr');
+                tr.className = 'parish-detail-row';
+                tr.append(makeCell(''));
+                tr.append(makeCell(item.place));
+                tr.append(makeCell(item.lithuanian));
+                const typeCell = document.createElement('td');
+                if (item.type) {
+                  const tag = document.createElement('span');
+                  tag.className = 'tag';
+                  tag.textContent = item.type;
+                  typeCell.append(tag);
+                } else typeCell.textContent = '—';
+                tr.append(typeCell);
+                const sourceCell = document.createElement('td');
+                if (item.url) {
+                  const link = document.createElement('a');
+                  link.href = item.url;
+                  link.target = '_blank';
+                  link.rel = 'noopener noreferrer';
+                  link.textContent = item.source || 'Atverti šaltinį';
+                  link.setAttribute('aria-label', (item.source || 'Atverti šaltinį') + ' (atsidaro naujame skirtuke)');
+                  sourceCell.append(link);
+                } else sourceCell.textContent = item.source || '—';
+                tr.append(sourceCell);
+                fragment.append(tr);
+              }
+            }
           }
           resultsEl.append(fragment);
         }
-        statusEl.textContent = 'Rasta įrašų: ' + filtered.length.toLocaleString('lt-LT') + ' iš ' + records.length.toLocaleString('lt-LT');
-        pageInfoEl.textContent = filtered.length ? (start + 1).toLocaleString('lt-LT') + '–' + Math.min(start + PAGE_SIZE, filtered.length).toLocaleString('lt-LT') : '';
+        statusEl.textContent = 'Rasta įrašų: ' + filtered.length.toLocaleString('lt-LT') + ' iš ' + records.length.toLocaleString('lt-LT') + ' · parapijų: ' + groups.length.toLocaleString('lt-LT');
+        pageInfoEl.textContent = groups.length ? (start + 1).toLocaleString('lt-LT') + '–' + Math.min(start + PAGE_SIZE, groups.length).toLocaleString('lt-LT') + ' parapijų' : '';
         pagerLabel.textContent = 'Puslapis ' + (page + 1) + ' iš ' + totalPages;
         prevBtn.disabled = page === 0;
         nextBtn.disabled = page >= totalPages - 1;
