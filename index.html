@@ -299,8 +299,14 @@
             toggle.textContent = (isExpanded ? '▾ ' : '▸ ') + (displayParish(parishName) || '—');
             toggle.title = isExpanded ? 'Sutraukti parapijos įrašus' : 'Išskleisti visus parapijos įrašus';
             toggle.addEventListener('click', () => {
-              if (expandedParishes.has(parishName)) expandedParishes.delete(parishName);
-              else expandedParishes.add(parishName);
+              if (expandedParishes.has(parishName)) {
+                expandedParishes.delete(parishName);
+                const marker = document.getElementById('map-selection-marker');
+                if (marker) marker.style.display = 'none';
+              } else {
+                expandedParishes.add(parishName);
+                selectMapLocation(parishName);
+              }
               render();
             });
             parishCell.append(toggle);
