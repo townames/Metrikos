@@ -17,8 +17,9 @@
     main { padding:18px 0 24px; }
     .workspace { display:grid; grid-template-columns:minmax(320px, 0.9fr) minmax(0, 1.22fr); gap:16px; align-items:start; }
     .map-panel { position:sticky; top:12px; min-width:0; }
-    .map-frame { width:100%; height:clamp(276px,46vh,432px); overflow:hidden; border:1px solid var(--line); border-radius:10px; background:#edf2f5; }
-    .map-frame iframe { width:100%; height:100%; border:0; }
+    .map-frame { position:relative; width:100%; height:clamp(276px,46vh,432px); overflow:hidden; border:1px solid var(--line); border-radius:10px; background:#edf2f5; }
+    .map-frame iframe { width:100%; height:100%; border:0; display:block; }
+    .map-selection-marker { position:absolute; width:22px; height:22px; border:3px solid #fff; border-radius:50%; background:#e00000; box-shadow:0 0 0 2px #b00000, 0 2px 8px #0008; transform:translate(-50%,-50%); pointer-events:none; z-index:2; display:none; }
     .list-column { min-width:0; }
     .list-scroll { max-height:calc(100vh - 300px); min-height:280px; overflow:auto; overscroll-behavior:contain; }
     .page-jumps { display:flex; justify-content:center; flex-wrap:wrap; gap:5px; margin-top:12px; }
@@ -85,6 +86,7 @@
           allow="fullscreen"
           referrerpolicy="strict-origin-when-cross-origin"
           allowfullscreen></iframe>
+        <div id="map-selection-marker" class="map-selection-marker" aria-label="Pasirinkta vietovė"></div>
       </div>
       <p class="hint"><a href="https://qgiscloud.com/Townames/KL14/" target="_blank" rel="noopener noreferrer">Atidaryti žemėlapį atskirame lange ↗</a></p>
     </section>
@@ -130,15 +132,12 @@
       if (status) status.textContent = 'Klaida apdorojant duomenis: ' + (event.reason?.message || String(event.reason || 'nežinoma klaida'));
     });
     (() => {
-      const PAGE_SIZE = 50;
       const queryEl = document.getElementById('query');
       const parishEl = document.getElementById('parish');
       const resultsEl = document.getElementById('results');
       const statusEl = document.getElementById('status');
-      const pageInfoEl = document.getElementById('page-info');
       let records = [];
       let filtered = [];
-      let page = 0;
 
       // CSV uses semicolons. Some source descriptions themselves contain semicolons,
       // so all fields between the place type and final URL are combined as the source.
@@ -204,7 +203,8 @@
       // Atveria QGIS Cloud žemėlapį tokiu pačiu būdu kaip Karaliaučiaus srities vietovardžių sąraše.
       const parishMapBase = 'https://qgiscloud.com/Townames/KL14/?l=Apskrities%20centras%2CParapijos%20centras%2CVietov%C4%97%2CMi%C5%A1kas%2CMikrotoponimas%2CPiliakalnis%2CJ%C5%ABros%20%C4%AFlanka%2CJ%C5%ABros%20kranto%20linija%2CE%C5%BEerai%2CE%C5%BEer%C5%B3%20pavadinimai%2CDidel%C4%97s%20up%C4%97s%2CUp%C4%97s%2CPalv%C4%97s%2CLietuvos%20siena%2CLenkijos%20siena%2Cktowns%20copy%20copy!%2Cupeskl_2!&bl=osm_hdm&t=KL14';
       // Apie 120 km pločio aprėptis: maždaug 1 cm = 10 km, priklausomai nuo ekrano ir žemėlapio lango dydžio.
-      const defaultMapUrl = parishMapBase + '&e=2411824%2C7312628%2C2531824%2C7380628';
+      const defaultMapExtent = { minX: 2160000, minY: 7220000, maxX: 2630000, maxY: 7600000 };
+      const defaultMapUrl = parishMapBase + '&e=2160000%2C7220000%2C2630000%2C7600000';
 
       const parishCoordinates = new Map();
       function parishSpecificMapUrl(name) {
@@ -225,18 +225,36 @@
         return `${parishMapBase}&e=${mapX - mapSize},${mapY - mapSize},${mapX + mapSize},${mapY + mapSize}`;
       }
 
+      function selectMapLocation(name) {
+        const marker = document.getElementById('map-selection-marker');
+        const coords = parishCoordinates.get(name);
+        if (!marker || !coords) return;
+        const [longitude, latitude] = coords;
+        const mapX = longitude * 20037508.34 / 180;
+        const mapY = Math.log(Math.tan((90 + latitude) * Math.PI / 360)) / (Math.PI / 180) * 20037508.34 / 180;
+        const x = (mapX - defaultMapExtent.minX) / (defaultMapExtent.maxX - defaultMapExtent.minX);
+        const y = (defaultMapExtent.maxY - mapY) / (defaultMapExtent.maxY - defaultMapExtent.minY);
+        if (x < 0 || x > 1 || y < 0 || y > 1) {
+          marker.style.display = 'none';
+          return;
+        }
+        marker.style.left = (x * 100) + '%';
+        marker.style.top = (y * 100) + '%';
+        marker.style.display = 'block';
+      }
+
       function makeParishCell(name) {
         const td = document.createElement('td');
         const link = document.createElement('a');
-        link.href = parishSpecificMapUrl(name);
+        link.href = '#';
         link.addEventListener('click', event => {
           event.preventDefault();
-          const mapFrame = document.getElementById('main-map-frame');
-          mapFrame.src = link.href;
-          document.querySelector('.map-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          selectMapLocation(name);
         });
         link.textContent = displayParish(name) || '—';
-        link.title = parishCoordinates.has(name) ? 'Rodyti šią parapiją kairėje esančiame žemėlapyje' : 'Rodyti numatytą žemėlapio vaizdą kairėje';
+        link.title = parishCoordinates.has(name)
+          ? 'Pažymėti šią parapiją žemėlapyje raudonu skrituliu'
+          : 'Šios parapijos koordinatės žemėlapyje nerastos';
         td.append(link);
         return td;
       }
@@ -256,10 +274,7 @@
           grouped.get(item.parish).push(item);
         }
         const groups = [...grouped.entries()].sort((a, b) => a[0].localeCompare(b[0], 'lt'));
-        const totalPages = Math.max(1, Math.ceil(groups.length / PAGE_SIZE));
-        page = Math.min(page, totalPages - 1);
-        const start = page * PAGE_SIZE;
-        const chunk = groups.slice(start, start + PAGE_SIZE);
+        const chunk = groups;
         resultsEl.replaceChildren();
 
         if (!chunk.length) {
@@ -330,17 +345,8 @@
           resultsEl.append(fragment);
         }
         statusEl.textContent = 'Rasta įrašų: ' + filtered.length.toLocaleString('lt-LT') + ' iš ' + records.length.toLocaleString('lt-LT') + ' · parapijų: ' + groups.length.toLocaleString('lt-LT');
-        pageInfoEl.textContent = groups.length ? (start + 1).toLocaleString('lt-LT') + '–' + Math.min(start + PAGE_SIZE, groups.length).toLocaleString('lt-LT') + ' parapijų' : '';
-        pageJumps.replaceChildren();
-        for (let i = 0; i < totalPages; i++) {
-          const jump = document.createElement('button');
-          jump.type = 'button';
-          jump.textContent = String(i + 1);
-          jump.setAttribute('aria-label', 'Atverti sąrašo puslapį ' + (i + 1));
-          if (i === page) jump.setAttribute('aria-current', 'page');
-          jump.addEventListener('click', () => { page = i; render(); });
-          pageJumps.append(jump);
-        }
+        const pageInfoEl = document.getElementById('page-info');
+        if (pageInfoEl) pageInfoEl.textContent = groups.length ? 'Parapijų: ' + groups.length.toLocaleString('lt-LT') : '';
       }
 
       function applyFilters(resetPage = true) {
@@ -352,7 +358,6 @@
           return [item.parish, displayParish(item.parish), item.place, item.lithuanian, item.type, item.source]
             .some(value => value.toLocaleLowerCase('lt-LT').includes(q));
         });
-        if (resetPage) page = 0;
         render();
       }
 
