@@ -81,7 +81,7 @@
       <div class="map-frame">
         <iframe
           title="Karaliaučiaus srities vietovardžių interaktyvus GIS žemėlapis"
-          id="main-map-frame" src="https://qgiscloud.com/Townames/KL14/?l=Apskrities%20centras%2CParapijos%20centras%2CVietov%C4%97%2CMi%C5%A1kas%2CMikrotoponimas%2CPiliakalnis%2CJ%C5%ABros%20%C4%AFlanka%2CJ%C5%ABros%20kranto%20linija%2CE%C5%BEerai%2CE%C5%BEer%C5%B3%20pavadinimai%2CDidel%C4%97s%20up%C4%97s%2CUp%C4%97s%2CPalv%C4%97s%2CLietuvos%20siena%2CLenkijos%20siena%2Cktowns%20copy%20copy!%2Cupeskl_2!&bl=osm_hdm&t=KL14&e=2160000%2C7220000%2C2630000%2C7600000"
+          id="main-map-frame" src="https://qgiscloud.com/Townames/KL14/?l=Apskrities%20centras%2CParapijos%20centras%2CVietov%C4%97%2CMi%C5%A1kas%2CMikrotoponimas%2CPiliakalnis%2CJ%C5%ABros%20%C4%AFlanka%2CJ%C5%ABros%20kranto%20linija%2CE%C5%BEerai%2CE%C5%BEer%C5%B3%20pavadinimai%2CDidel%C4%97s%20up%C4%97s%2CUp%C4%97s%2CPalv%C4%97s%2CLietuvos%20siena%2CLenkijos%20siena%2Cktowns%20copy%20copy!%2Cupeskl_2!&bl=osm_hdm&t=KL14&e=2160000%2C7258000%2C2630000%2C7638000"
           loading="lazy"
           allow="fullscreen"
           referrerpolicy="strict-origin-when-cross-origin"
@@ -203,8 +203,8 @@
       // Atveria QGIS Cloud žemėlapį tokiu pačiu būdu kaip Karaliaučiaus srities vietovardžių sąraše.
       const parishMapBase = 'https://qgiscloud.com/Townames/KL14/?l=Apskrities%20centras%2CParapijos%20centras%2CVietov%C4%97%2CMi%C5%A1kas%2CMikrotoponimas%2CPiliakalnis%2CJ%C5%ABros%20%C4%AFlanka%2CJ%C5%ABros%20kranto%20linija%2CE%C5%BEerai%2CE%C5%BEer%C5%B3%20pavadinimai%2CDidel%C4%97s%20up%C4%97s%2CUp%C4%97s%2CPalv%C4%97s%2CLietuvos%20siena%2CLenkijos%20siena%2Cktowns%20copy%20copy!%2Cupeskl_2!&bl=osm_hdm&t=KL14';
       // Apie 120 km pločio aprėptis: maždaug 1 cm = 10 km, priklausomai nuo ekrano ir žemėlapio lango dydžio.
-      const defaultMapExtent = { minX: 2160000, minY: 7220000, maxX: 2630000, maxY: 7600000 };
-      const defaultMapUrl = parishMapBase + '&e=2160000%2C7220000%2C2630000%2C7600000';
+      const defaultMapExtent = { minX: 2160000, minY: 7258000, maxX: 2630000, maxY: 7638000 };
+      const defaultMapUrl = parishMapBase + '&e=2160000%2C7258000%2C2630000%2C7638000';
 
       const parishCoordinates = new Map();
       function parishSpecificMapUrl(name) {
