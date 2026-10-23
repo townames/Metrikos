@@ -203,8 +203,8 @@
       // Atveria QGIS Cloud žemėlapį tokiu pačiu būdu kaip Karaliaučiaus srities vietovardžių sąraše.
       const parishMapBase = 'https://qgiscloud.com/Townames/KL14/?l=Apskrities%20centras%2CParapijos%20centras%2CVietov%C4%97%2CMi%C5%A1kas%2CMikrotoponimas%2CPiliakalnis%2CJ%C5%ABros%20%C4%AFlanka%2CJ%C5%ABros%20kranto%20linija%2CE%C5%BEerai%2CE%C5%BEer%C5%B3%20pavadinimai%2CDidel%C4%97s%20up%C4%97s%2CUp%C4%97s%2CPalv%C4%97s%2CLietuvos%20siena%2CLenkijos%20siena%2Cktowns%20copy%20copy!%2Cupeskl_2!&bl=osm_hdm&t=KL14';
       // Apie 120 km pločio aprėptis: maždaug 1 cm = 10 km, priklausomai nuo ekrano ir žemėlapio lango dydžio.
-      const defaultMapExtent = { minX: 2200000, minY: 7200000, maxX: 2600000, maxY: 7300000 };
-      const defaultMapUrl = parishMapBase + '&e=2200000%2C7200000%2C2600000%2C7300000';
+      const defaultMapExtent = { minX: 2160000, minY: 7182000, maxX: 2630000, maxY: 7562000 };
+      const defaultMapUrl = parishMapBase + '&e=2160000%2C7182000%2C2630000%2C7562000';
 
       const parishCoordinates = new Map();
       const mapFrame = document.getElementById('main-map-frame');
@@ -248,10 +248,6 @@
         'Tollmingkehmen': [2501820, 7252810],
         'Walterkehmen': [2481950, 7268150]
       };
-
-      // Išsaugo bendrą žemėlapio pradinę aprėptį.
-      const defaultMapExtent = { minX: 2200000, minY: 7200000, maxX: 2630000, maxY: 7562000 };
-      const defaultMapUrl = parishMapBase + '&e=2160000%2C7182000%2C2630000%2C7562000';
 
       function encodeExtent(minX, minY, maxX, maxY) {
         return [minX, minY, maxX, maxY].map(v => Math.round(v)).join('%2C');
