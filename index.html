@@ -214,6 +214,11 @@
           'Darkehmen': '2449329%2C7247525%2C2451164%2C7248566',
           'Heinrichswalde': '2412160%2C7369600%2C2413994%2C7370641'
         };
+        const fixedPoints = {
+  'Didlacken': '2421745%2C7280383.5',
+  'Darkehmen': '2450246.5%2C7248045.5',
+  'Heinrichswalde': '2413077%2C7370120.5'
+};
         if (fixedExtents[name]) return `${parishMapBase}&e=${fixedExtents[name]}`;
 
         const coords = parishCoordinates.get(name);
