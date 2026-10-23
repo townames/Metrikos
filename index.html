@@ -207,76 +207,113 @@
       const defaultMapUrl = parishMapBase + '&e=2200000%2C7200000%2C2600000%2C7300000';
 
       const parishCoordinates = new Map();
-      function parishSpecificMapUrl(name) {
-        // Tiksliai nustatyta aprėptis Didlaukiams (Didlacken), vienoda visose jo eilutėse.
-        const fixedExtents = {
-          'Didlacken': '2420828%2C7279863%2C2422662%2C7280904',
-          'Darkehmen': '2449329%2C7247525%2C2451164%2C7248566',
-          'Heinrichswalde': '2412160%2C7369600%2C2413994%2C7370641'
-        };
-        const fixedPoints = {
-  'Didlacken': '2421745%2C7280383.5',
-  'Darkehmen': '2450246.5%2C7248045.5',
-  'Heinrichswalde': '2413077%2C7370120.5',
-  'Groß Aulowönen': '2417772%2C7326888',  // Didieji Aulovėnai (Kalinovka)
-  'Groß Legitten': '2342080%2C7334700',   // Didieji Lėgėčiai (Turgenjevo)
-  'Ischdaggen': '2477545%2C7280875',      // Išdagiai (Lermontovo)
-  'Jodlauken': '2419515%2C7274020',       // Juodlaukiai (Volodino)
-  'Kaimen': '2349310%2C7348920',          // Kaimėnai (Zelenovo)
-  'Kallningken': '2381250%2C7389810',     // Kalnininkai (Prochladnoje)
-  'Karalene': '2432920%2C7290150',        // Karalienė (Zelionyj Bor)
-  'Karkeln': '2371920%2C7410210',         // Karklė (Myshovka)
-  'Kaukehmen': '2398750%2C7420130',       // Kaukiemis (Jasnoje)
-  'Kraupischken': '2454120%2C7322980',    // Kraupiškėnai (Uljonavo)
-  'Labiau': '2352810%2C7332150',          // Labguva (Poleskas)
-  'Lappienen': '2385110%2C7392810',       // Lapynai (Bolšije Berezaki)
-  'Lasdehnen': '2501050%2C7341850',       // Lazdynai (Krasnoznamenskas)
-  'Lengwethen': '2469110%2C7337920',      // Lengvėnai (Lunin)
-  'Mallwischken': '2470120%2C7301280',    // Mališkiai (Majovskojė)
-  'Niebudszen': '2451920%2C7298150',      // Naubudžiai (Krasnogorskoje)
-  'Pillkallen': '2511250%2C7318120',      // Pilkalnis (Dobrovolskas)
-  'Pilluponen': '2531120%2C7295180',      // Pilupėnai (Nevskoje)
-  'Pillupönen': '2531120%2C7295180',      // Pilupėnai (alternatyvus rašymas)
-  'Popelken': '2391280%2C7328910',        // Papelka (Vysokoje)
-  'Puschdorf': '2385120%2C7289510',       // Pušdorfas (Puškarjovo)
-  'Schaaken': '2321150%2C7341050',        // Šakiai (Nekrasovo)
-  'Schakuhnen': '2389150%2C7412150',      // Šakūnai (Levoberežnoje)
-  'Schönwalde': '2301250%2C7332150',      // Gražiškiai (Jaroslavskoje)
-  'Skaisgirren': '2411950%2C7339180',     // Skaistgiriai (Bolšakovo)
-  'Stallupönen': '2508150%2C7288120',     // Stalupėnai (Nesterovas)
-  'Szillen': '2440180%2C7339120',         // Žiliai (Zilino)
-  'Tapiau': '2350120%2C7295120',          // Tepliava (Gvardrejskas)
-  'Tilsit': '2439810%2C7378910',          // Tilžė (Sovetskas)
-  'Tollmingkehmen': '2501820%2C7252810',  // Tolminkiemis (Čistyje Prudy)
-  'Walterkehmen': '2481950%2C7268150'     // Valtarkiemis (Olchovatka)
-};
-        if (fixedExtents[name]) return `${parishMapBase}&e=${fixedExtents[name]}`;
+      const mapFrame = document.getElementById('main-map-frame');
+      const selectionMarker = document.getElementById('map-selection-marker');
 
+      // fixedPoints saugo QGIS Web Mercator (EPSG:3857) X,Y koordinates metrais.
+      // Pasirinkus parapiją, žemėlapio aprėptis perkeliama į šį tašką.
+      const fixedPoints = {
+        'Didlacken': [2421745, 7280383.5],
+        'Darkehmen': [2450246.5, 7248045.5],
+        'Heinrichswalde': [2413077, 7370120.5],
+        'Groß Aulowönen': [2417772, 7326888],
+        'Groß Legitten': [2342080, 7334700],
+        'Ischdaggen': [2477545, 7280875],
+        'Jodlauken': [2419515, 7274020],
+        'Kaimen': [2349310, 7348920],
+        'Kallningken': [2381250, 7389810],
+        'Karalene': [2432920, 7290150],
+        'Karkeln': [2371920, 7410210],
+        'Kaukehmen': [2398750, 7420130],
+        'Kraupischken': [2454120, 7322980],
+        'Labiau': [2352810, 7332150],
+        'Lappienen': [2385110, 7392810],
+        'Lasdehnen': [2501050, 7341850],
+        'Lengwethen': [2469110, 7337920],
+        'Mallwischken': [2470120, 7301280],
+        'Niebudszen': [2451920, 7298150],
+        'Pillkallen': [2511250, 7318120],
+        'Pilluponen': [2531120, 7295180],
+        'Pillupönen': [2531120, 7295180],
+        'Popelken': [2391280, 7328910],
+        'Puschdorf': [2385120, 7289510],
+        'Schaaken': [2321150, 7341050],
+        'Schakuhnen': [2389150, 7412150],
+        'Schönwalde': [2301250, 7332150],
+        'Skaisgirren': [2411950, 7339180],
+        'Stallupönen': [2508150, 7288120],
+        'Szillen': [2440180, 7339120],
+        'Tapiau': [2350120, 7295120],
+        'Tilsit': [2439810, 7378910],
+        'Tollmingkehmen': [2501820, 7252810],
+        'Walterkehmen': [2481950, 7268150]
+      };
+
+      // Išsaugo bendrą žemėlapio pradinę aprėptį.
+      const defaultMapExtent = { minX: 2200000, minY: 7200000, maxX: 2630000, maxY: 7562000 };
+      const defaultMapUrl = parishMapBase + '&e=2160000%2C7182000%2C2630000%2C7562000';
+
+      function encodeExtent(minX, minY, maxX, maxY) {
+        return [minX, minY, maxX, maxY].map(v => Math.round(v)).join('%2C');
+      }
+
+      function parishSpecificMapUrl(name) {
+        const point = fixedPoints[name];
+        if (point) {
+          // Apie 2 km pločio vaizdas, centruotas ties parapijos centru.
+          const [x, y] = point;
+          const halfSize = 1800;
+          return `${parishMapBase}&e=${encodeExtent(x - halfSize, y - halfSize, x + halfSize, y + halfSize)}`;
+        }
         const coords = parishCoordinates.get(name);
         if (!coords) return defaultMapUrl;
         const [longitude, latitude] = coords;
         const mapX = longitude * 20037508.34 / 180;
         const mapY = Math.log(Math.tan((90 + latitude) * Math.PI / 360)) / (Math.PI / 180) * 20037508.34 / 180;
-        const mapSize = 500;
-        return `${parishMapBase}&e=${mapX - mapSize},${mapY - mapSize},${mapX + mapSize},${mapY + mapSize}`;
+        const halfSize = 1800;
+        return `${parishMapBase}&e=${encodeExtent(mapX - halfSize, mapY - halfSize, mapX + halfSize, mapY + halfSize)}`;
       }
 
       function selectMapLocation(name) {
-        const marker = document.getElementById('map-selection-marker');
+        const point = fixedPoints[name];
         const coords = parishCoordinates.get(name);
-        if (!marker || !coords) return;
-        const [longitude, latitude] = coords;
-        const mapX = longitude * 20037508.34 / 180;
-        const mapY = Math.log(Math.tan((90 + latitude) * Math.PI / 360)) / (Math.PI / 180) * 20037508.34 / 180;
-        const x = (mapX - defaultMapExtent.minX) / (defaultMapExtent.maxX - defaultMapExtent.minX);
-        const y = (defaultMapExtent.maxY - mapY) / (defaultMapExtent.maxY - defaultMapExtent.minY);
-        if (x < 0 || x > 1 || y < 0 || y > 1) {
-          marker.style.display = 'none';
+        const frame = document.getElementById('main-map-frame');
+        const marker = document.getElementById('map-selection-marker');
+        if (!frame) return;
+
+        if (point) {
+          const [x, y] = point;
+          const halfSize = 1800;
+          const extent = encodeExtent(x - halfSize, y - halfSize, x + halfSize, y + halfSize);
+          frame.src = `${parishMapBase}&e=${extent}`;
+          // QGIS žemėlapis yra iframe, todėl jo viduje tiksliai uždėti žymeklio negalime.
+          // Pažymime pasirinkimą pačiame puslapyje, žemėlapio lango centre.
+          if (marker) {
+            marker.style.left = '50%';
+            marker.style.top = '50%';
+            marker.style.display = 'block';
+            marker.title = 'Pasirinkta parapija: ' + (displayParish(name) || name);
+          }
           return;
         }
-        marker.style.left = (x * 100) + '%';
-        marker.style.top = (y * 100) + '%';
-        marker.style.display = 'block';
+
+        if (coords) {
+          const [longitude, latitude] = coords;
+          const mapX = longitude * 20037508.34 / 180;
+          const mapY = Math.log(Math.tan((90 + latitude) * Math.PI / 360)) / (Math.PI / 180) * 20037508.34 / 180;
+          const halfSize = 1800;
+          frame.src = `${parishMapBase}&e=${encodeExtent(mapX - halfSize, mapY - halfSize, mapX + halfSize, mapY + halfSize)}`;
+          if (marker) {
+            marker.style.left = '50%';
+            marker.style.top = '50%';
+            marker.style.display = 'block';
+            marker.title = 'Pasirinkta parapija: ' + (displayParish(name) || name);
+          }
+          return;
+        }
+
+        frame.src = defaultMapUrl;
+        if (marker) marker.style.display = 'none';
       }
 
       function makeParishCell(name) {
@@ -288,9 +325,7 @@
           selectMapLocation(name);
         });
         link.textContent = displayParish(name) || '—';
-        link.title = parishCoordinates.has(name)
-          ? 'Pažymėti šią parapiją žemėlapyje raudonu skrituliu'
-          : 'Šios parapijos koordinatės žemėlapyje nerastos';
+        link.title = 'Rodyti šią parapiją žemėlapyje';
         td.append(link);
         return td;
       }
