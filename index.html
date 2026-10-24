@@ -216,6 +216,18 @@
       const mapFrame = document.getElementById('main-map-frame');
       const selectionMarker = document.getElementById('map-selection-marker');
 
+      // Paspaudus, pradedant slinkti ar artinti žemėlapį, paslėpti pasirinkimo žymeklį.
+      // QGIS Cloud įkeltas iš kito domeno, todėl stebime iframe fokusavimą ir sąveiką jo rėme.
+      function hideSelectionMarker() {
+        if (selectionMarker) selectionMarker.style.display = 'none';
+      }
+      if (mapFrame) {
+        mapFrame.addEventListener('focus', hideSelectionMarker);
+        mapFrame.addEventListener('pointerdown', hideSelectionMarker);
+        mapFrame.addEventListener('wheel', hideSelectionMarker, { passive: true });
+        mapFrame.addEventListener('touchstart', hideSelectionMarker, { passive: true });
+      }
+
       // fixedPoints saugo QGIS Web Mercator (EPSG:3857) X,Y koordinates metrais.
       // Pasirinkus parapiją, žemėlapio aprėptis perkeliama į šį tašką.
       const fixedPoints = {
@@ -263,7 +275,7 @@
         if (point) {
           // Apie 2 km pločio vaizdas, centruotas ties parapijos centru.
           const [x, y] = point;
-          const halfSize = 1800;
+          const halfSize = 100000;
           return `${parishMapBase}&e=${encodeExtent(x - halfSize, y - halfSize, x + halfSize, y + halfSize)}`;
         }
         const coords = parishCoordinates.get(name);
@@ -271,7 +283,7 @@
         const [longitude, latitude] = coords;
         const mapX = longitude * 20037508.34 / 180;
         const mapY = Math.log(Math.tan((90 + latitude) * Math.PI / 360)) / (Math.PI / 180) * 20037508.34 / 180;
-        const halfSize = 1800;
+        const halfSize = 100000;
         return `${parishMapBase}&e=${encodeExtent(mapX - halfSize, mapY - halfSize, mapX + halfSize, mapY + halfSize)}`;
       }
 
@@ -284,7 +296,7 @@
 
         if (point) {
           const [x, y] = point;
-          const halfSize = 1800;
+          const halfSize = 100000;
           const extent = encodeExtent(x - halfSize, y - halfSize, x + halfSize, y + halfSize);
           frame.src = `${parishMapBase}&e=${extent}`;
           // QGIS žemėlapis yra iframe, todėl jo viduje tiksliai uždėti žymeklio negalime.
@@ -302,7 +314,7 @@
           const [longitude, latitude] = coords;
           const mapX = longitude * 20037508.34 / 180;
           const mapY = Math.log(Math.tan((90 + latitude) * Math.PI / 360)) / (Math.PI / 180) * 20037508.34 / 180;
-          const halfSize = 1800;
+          const halfSize = 100000;
           frame.src = `${parishMapBase}&e=${encodeExtent(mapX - halfSize, mapY - halfSize, mapX + halfSize, mapY + halfSize)}`;
           if (marker) {
             marker.style.left = '50%';
