@@ -278,35 +278,43 @@
       function selectMapLocation(name) {
         const point = fixedPoints[name];
         const coords = parishCoordinates.get(name);
-        const marker = selectionMarker;
-        if (!marker) return;
+        const frame = document.getElementById('main-map-frame');
+        const marker = document.getElementById('map-selection-marker');
+        if (!frame) return;
 
-        let mapX, mapY;
         if (point) {
-          [mapX, mapY] = point;
-        } else if (coords) {
-          const [longitude, latitude] = coords;
-          mapX = longitude * 20037508.34 / 180;
-          mapY = Math.log(Math.tan((90 + latitude) * Math.PI / 360)) / (Math.PI / 180) * 20037508.34 / 180;
-        } else {
-          marker.style.display = 'none';
+          const [x, y] = point;
+          const halfSize = 1800;
+          const extent = encodeExtent(x - halfSize, y - halfSize, x + halfSize, y + halfSize);
+          frame.src = `${parishMapBase}&e=${extent}`;
+          // QGIS žemėlapis yra iframe, todėl jo viduje tiksliai uždėti žymeklio negalime.
+          // Pažymime pasirinkimą pačiame puslapyje, žemėlapio lango centre.
+          if (marker) {
+            marker.style.left = '50%';
+            marker.style.top = '50%';
+            marker.style.display = 'block';
+            marker.title = 'Pasirinkta parapija: ' + (displayParish(name) || name);
+          }
           return;
         }
 
-        // Žymeklio vietą apskaičiuojame pagal pradinį žemėlapio aprėpties langą.
-        // Pasirinkus vietovę, iframe URL nekeičiamas: žemėlapis nepriartinamas
-        // ir nepersicentruojamas.
-        const extent = { minX: 2200000, minY: 7170000, maxX: 2600000, maxY: 7550000 };
-        const x = (mapX - extent.minX) / (extent.maxX - extent.minX);
-        const y = (extent.maxY - mapY) / (extent.maxY - extent.minY);
-        if (x < 0 || x > 1 || y < 0 || y > 1) {
-          marker.style.display = 'none';
+        if (coords) {
+          const [longitude, latitude] = coords;
+          const mapX = longitude * 20037508.34 / 180;
+          const mapY = Math.log(Math.tan((90 + latitude) * Math.PI / 360)) / (Math.PI / 180) * 20037508.34 / 180;
+          const halfSize = 1800;
+          frame.src = `${parishMapBase}&e=${encodeExtent(mapX - halfSize, mapY - halfSize, mapX + halfSize, mapY + halfSize)}`;
+          if (marker) {
+            marker.style.left = '50%';
+            marker.style.top = '50%';
+            marker.style.display = 'block';
+            marker.title = 'Pasirinkta parapija: ' + (displayParish(name) || name);
+          }
           return;
         }
-        marker.style.left = (x * 100) + '%';
-        marker.style.top = (y * 100) + '%';
-        marker.style.display = 'block';
-        marker.title = 'Pasirinkta vietovė: ' + (displayParish(name) || name);
+
+        frame.src = defaultMapUrl;
+        if (marker) marker.style.display = 'none';
       }
 
       function makeParishCell(name) {
