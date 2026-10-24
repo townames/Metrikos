@@ -345,7 +345,9 @@
           if (!grouped.has(item.parish)) grouped.set(item.parish, []);
           grouped.get(item.parish).push(item);
         }
-        const groups = [...grouped.entries()].sort((a, b) => a[0].localeCompare(b[0], 'lt'));
+        const groups = [...grouped.entries()].sort((a, b) =>
+          displayParish(a[0]).localeCompare(displayParish(b[0]), 'lt')
+        );
         const chunk = groups;
         resultsEl.replaceChildren();
 
@@ -480,7 +482,7 @@
           const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(line => line.trim());
           records = lines.slice(1).map(parseLine).filter(Boolean);
           const parishes = [...new Set(records.map(item => item.parish).filter(Boolean))]
-            .sort((a, b) => a.localeCompare(b, 'lt'));
+            .sort((a, b) => displayParish(a).localeCompare(displayParish(b), 'lt'));
           for (const name of parishes) {
             const option = document.createElement('option');
             option.value = name;
