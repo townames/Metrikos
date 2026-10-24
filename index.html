@@ -148,6 +148,13 @@
         const place = fields[1] || '';
         const lithuanian = fields[2] || '';
         const type = fields[3] || '';
+
+        // Praleidžiame CSV antraščių eilutes, įskaitant įterptas kitų šaltinių antraštes.
+        const header = fields.map(v => v.toLocaleLowerCase('lt'));
+        if (
+          (header[0] === 'parapija' && header[1] === 'vietovė') ||
+          (header[0] === 'parish / source collection' && header[1] === 'historical form (parentheses)')
+        ) return null;
         const last = fields[fields.length - 1] || '';
         const hasUrl = /^https?:\/\//i.test(last);
         const sourceEnd = hasUrl ? fields.length - 1 : fields.length;
