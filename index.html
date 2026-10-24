@@ -144,7 +144,9 @@
       function parseLine(line) {
         const fields = line.split(';').map(v => v.trim());
         if (fields.length < 2) return null;
-        const parish = fields[0] || '';
+        const rawParish = fields[0] || '';
+        // Suvienodiname dvi istorinės parapijos rašybos formas į vieną įrašų grupę.
+        const parish = rawParish === 'Pilluponen' ? 'Pillupönen' : rawParish;
         const place = fields[1] || '';
         const lithuanian = fields[2] || '';
         const type = fields[3] || '';
