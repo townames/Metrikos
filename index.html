@@ -86,7 +86,7 @@
     <div class="workspace">
     <section class="panel map-panel" aria-label="Karaliaučiaus srities žemėlapis">
       <h2 style="margin:0 0 8px;font-size:1.35rem">Karaliaučiaus srities žemėlapis</h2>
-      <p class="hint" style="margin:0 0 12px">Interaktyvus žemėlapis su originaliais GIS sluoksniais. Galite artinti, tolinti ir pasirinkti objektus; atidarius visą žemėlapį pasiekiamos visos jo funkcijos.</p>
+      <p class="hint" style="margin:0 0 12px">Interaktyvus žemėlapis su originaliais GIS sluoksniais.</p>
       <div class="map-frame">
         <iframe
           title="Karaliaučiaus srities vietovardžių interaktyvus GIS žemėlapis"
@@ -130,7 +130,7 @@
     </div>
     </div>
   </main>
-  <footer class="wrap">Duomenų šaltinis: <a href="./parish.csv">parish.csv</a>. Šaltinių nuorodos atveriamos naujame skirtuke.</footer>
+  <footer class="wrap">Duomenų šaltinis: <a href="https://townames.github.io/Karaliauciaus-srities-vietovardziai/start.html">Karaliauciaus srities vietovardziai</a>. Šaltinių nuorodos atveriamos naujame skirtuke.</footer>
   <script>
     window.addEventListener('error', event => {
       const status = document.getElementById('status');
@@ -255,7 +255,7 @@
         selectionMarker.style.display = 'block';
         selectionMarker.title = 'Pasirinkta parapija: ' + (displayParish(name) || name);
 
-        markerHideTimer = window.setTimeout(hideSelectionMarker, 3000);
+        markerHideTimer = window.setTimeout(hideSelectionMarker, 4000);
       }
 
       if (mapFrame) {
