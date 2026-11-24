@@ -230,73 +230,39 @@
       const selectionMarker = document.getElementById('map-selection-marker');
 
       // QGIS Cloud žemėlapis įkeltas į kito domeno iframe.
-      // Kompiuteryje žymeklį paslepiame, kai iframe gauna fokusą.
-      // Mobiliajame įrenginyje tėvinis puslapis negali patikimai aptikti
-      // prisilietimų iframe viduje, todėl žymeklį paslepiame automatiškai
-      // praėjus kelioms sekundėms po žemėlapio įkėlimo.
+      // Pasirinkus parapiją, raudonas žymeklis rodomas 3 sekundes
+      // visuose įrenginiuose ir tada automatiškai paslepiamas.
       let markerHideTimer = null;
-      let markerFallbackTimer = null;
-      let markerLoadHandler = null;
 
-      function clearMarkerTimers() {
+      function hideSelectionMarker() {
         if (markerHideTimer !== null) {
           window.clearTimeout(markerHideTimer);
           markerHideTimer = null;
         }
-        if (markerFallbackTimer !== null) {
-          window.clearTimeout(markerFallbackTimer);
-          markerFallbackTimer = null;
-        }
-        if (mapFrame && markerLoadHandler) {
-          mapFrame.removeEventListener('load', markerLoadHandler);
-          markerLoadHandler = null;
-        }
-      }
-
-      function hideSelectionMarker() {
-        clearMarkerTimers();
         if (selectionMarker) selectionMarker.style.display = 'none';
       }
 
       function showSelectionMarker(name) {
         if (!selectionMarker) return;
-        clearMarkerTimers();
+
+        if (markerHideTimer !== null) {
+          window.clearTimeout(markerHideTimer);
+          markerHideTimer = null;
+        }
 
         selectionMarker.style.left = '50%';
         selectionMarker.style.top = '50%';
         selectionMarker.style.display = 'block';
         selectionMarker.title = 'Pasirinkta parapija: ' + (displayParish(name) || name);
 
-        // Touchscreen įrenginiuose nėra patikimo būdo aptikti gestą
-        // kito domeno iframe viduje. Todėl po žemėlapio įkėlimo
-        // žymeklį paliekame matomą 3 sekundes ir tada paslepiame.
-        const isTouchDevice = window.matchMedia &&
-          window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-
-        if (isTouchDevice && mapFrame) {
-          const startHideCountdown = () => {
-            if (markerHideTimer !== null) return;
-            if (markerFallbackTimer !== null) {
-              window.clearTimeout(markerFallbackTimer);
-              markerFallbackTimer = null;
-            }
-            if (markerLoadHandler) {
-              mapFrame.removeEventListener('load', markerLoadHandler);
-              markerLoadHandler = null;
-            }
-            markerHideTimer = window.setTimeout(hideSelectionMarker, 3000);
-          };
-
-          markerLoadHandler = startHideCountdown;
-          mapFrame.addEventListener('load', markerLoadHandler, { once: true });
-
-          // Atsarginis laikmatis, jei iframe įkėlimo įvykis vėluotų arba neįvyktų.
-          markerFallbackTimer = window.setTimeout(startHideCountdown, 5000);
-        }
+        markerHideTimer = window.setTimeout(hideSelectionMarker, 3000);
       }
 
       if (mapFrame) {
+        // Papildoma apsauga: jei naudotojas pradeda valdyti žemėlapio iframe,
+        // žymeklį paslepiame iš karto, nelaukdami 3 sekundžių.
         mapFrame.addEventListener('focus', hideSelectionMarker);
+        mapFrame.addEventListener('pointerdown', hideSelectionMarker);
 
         window.addEventListener('blur', () => {
           window.setTimeout(() => {
@@ -305,8 +271,6 @@
             }
           }, 0);
         });
-
-        mapFrame.addEventListener('pointerdown', hideSelectionMarker);
       }
 
       // fixedPoints saugo QGIS Web Mercator (EPSG:3857) X,Y koordinates metrais.
@@ -376,7 +340,6 @@
         const point = fixedPoints[name];
         const coords = parishCoordinates.get(name);
         const frame = document.getElementById('main-map-frame');
-        const marker = document.getElementById('map-selection-marker');
         if (!frame) return;
 
         if (point) {
