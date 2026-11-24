@@ -229,16 +229,27 @@
       const mapFrame = document.getElementById('main-map-frame');
       const selectionMarker = document.getElementById('map-selection-marker');
 
-      // Paspaudus, pradedant slinkti ar artinti žemėlapį, paslėpti pasirinkimo žymeklį.
-      // QGIS Cloud įkeltas iš kito domeno, todėl stebime iframe fokusavimą ir sąveiką jo rėme.
+      // QGIS Cloud žemėlapis įkeltas į cross-origin iframe, todėl jo vidiniai
+      // pointerdown / wheel / touch įvykiai nepasiekia pagrindinio puslapio.
+      // Paslėpiame žymeklį, kai pats žemėlapio iframe gauna fokusą.
       function hideSelectionMarker() {
         if (selectionMarker) selectionMarker.style.display = 'none';
       }
       if (mapFrame) {
         mapFrame.addEventListener('focus', hideSelectionMarker);
+
+        // Naršyklės langas praranda fokusą, kai naudotojas pereina į iframe.
+        // Patikriname activeElement kitame cikle, kad naršyklė spėtų jį atnaujinti.
+        window.addEventListener('blur', () => {
+          window.setTimeout(() => {
+            if (document.activeElement === mapFrame) {
+              hideSelectionMarker();
+            }
+          }, 0);
+        });
+
+        // Papildoma atsarga sąveikai su pačiu iframe elementu (ne jo vidiniu dokumentu).
         mapFrame.addEventListener('pointerdown', hideSelectionMarker);
-        mapFrame.addEventListener('wheel', hideSelectionMarker, { passive: true });
-        mapFrame.addEventListener('touchstart', hideSelectionMarker, { passive: true });
       }
 
       // fixedPoints saugo QGIS Web Mercator (EPSG:3857) X,Y koordinates metrais.
